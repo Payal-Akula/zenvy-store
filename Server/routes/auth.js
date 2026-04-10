@@ -1,7 +1,7 @@
 // auth/otp/send
 const { Router } = require("express")
 const { emailRegex } = require("../utils/regex")
-const { sendOtp, verifyOtp } = require("../services/authservice")
+const { sendOtp, verifyOtp } = require("../services/authService")
 const User = require("../models/User");
 const { generateToken } = require("../services/jwtservice");
 
