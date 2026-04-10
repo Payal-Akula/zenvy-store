@@ -1,0 +1,52 @@
+.ab {
+  display: block;
+}
+
+.bc {
+  display: none;
+}
+
+.address-container {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.address-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.autofill-box {
+  background-color: #eef7fb;
+  border: 1px solid #cde7f3;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.form-label {
+  font-size: 14px;
+}
+
+.form-control {
+  border-radius: 6px;
+  font-size: 14px;
+  padding: 10px;
+}
+
+.btn-warning {
+  background-color: #ffd814;
+  border: 1px solid #fcd200;
+  color: #0f1111;
+  font-weight: 500;
+}
+
+.btn-warning:hover {
+  background-color: #f7ca00;
+}
+
+@media (max-width: 768px) {
+  .address-container {
+    padding: 15px;
+  }
+}

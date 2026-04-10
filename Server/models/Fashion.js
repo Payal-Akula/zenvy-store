@@ -1,0 +1,15 @@
+const mongoose = require("mongoose");
+
+const fashionSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: String,
+  category: { type: String, default: "Fashion" },
+  price: Number,
+  discountPercentage: Number,
+  rating: Number,
+  thumbnail: String,
+  images: [String],
+  brand: String
+}, { timestamps: true });
+
+module.exports = mongoose.model("Fashion", fashionSchema,"fashion");
