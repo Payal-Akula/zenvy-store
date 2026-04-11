@@ -7,8 +7,14 @@ const BestDeals = require("../models/BestDeals");
 const PDFDocument = require('pdfkit');
 const sgMail = require('@sendgrid/mail');
 const NewArrival = require("../models/NewArrival"); 
+const Fashion = require("../models/Fashion");
+const Furniture = require("../models/Furniture");
+const HealthBeauty = require("../models/HealthBeauty");
+const SmartphoneTablet = require("../models/SmartphoneTablet");
+const Electronics = require("../models/Electronics");
+const Jewelry = require("../models/Jewelry");
 
-// Configure SendGrid (same as your authService)
+// Configure SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API);
 
 console.log("📧 Order Email Service Initialized with SendGrid");
@@ -27,7 +33,7 @@ const sendOrderEmail = async (email, orderData) => {
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price * item.quantity}</td>
-     </tr>
+    </tr>
   `).join('');
 
   const msg = {
@@ -75,12 +81,13 @@ const sendOrderEmail = async (email, orderData) => {
                 </a>
               </div>
               <p style="margin-top:20px;">Thanks for shopping with <b>Zenvy</b> ❤️</p>
-            </td></tr>
+            </td>
+            </tr>
             <tr><td align="center" bgcolor="#111" style="color:#aaa; padding:10px; font-size:12px;">
               © 2026 Zenvy
-            </td></tr>
+            </td>
           </table>
-        </td></tr>
+        </td>
       </table>
     `
   };
@@ -124,7 +131,8 @@ const sendStatusUpdateEmail = async (email, order, status) => {
           <table width="600" bgcolor="#ffffff" style="border-radius:10px; overflow:hidden;">
             <tr><td align="center" bgcolor="#e12727" style="padding:15px;">
               <h2 style="color:#fff; margin:0;">ZENVY</h2>
-            </td></tr>
+            </td>
+            </tr>
             <tr><td style="padding:20px; font-family:Arial;">
               <h2 style="color:${color};">${status === "SHIPPED" ? "🚚 Order Shipped!" : "📦 Order Delivered!"}</h2>
               <p>Hi <b>${order.userDetails?.name || "Customer"}</b>,</p>
@@ -141,12 +149,13 @@ const sendStatusUpdateEmail = async (email, order, status) => {
                 </a>
               </div>
               <p style="margin-top:20px;">Thank you for shopping with <b>Zenvy</b>! ❤️</p>
-            </td></tr>
+            </td>
+            </tr>
             <tr><td align="center" bgcolor="#111" style="color:#aaa; padding:10px; font-size:12px;">
               © 2026 Zenvy
-            </td></tr>
+            </td>
           </table>
-        </td></tr>
+        </td>
       </table>
     `
   };
@@ -161,9 +170,8 @@ const sendStatusUpdateEmail = async (email, order, status) => {
   }
 };
 
-// ========== REST OF YOUR CODE (NO CHANGES) ==========
+// ========== AUTO STATUS UPDATE FUNCTION ==========
 
-// Auto status update function (same as before)
 const updateOrderStatuses = async () => {
   try {
     const now = new Date();
@@ -235,56 +243,98 @@ const startAutoStatusUpdate = () => {
   }, 5000);
 };
 
-// ========== API ENDPOINTS (NO CHANGES TO YOUR DESIGN) ==========
+// ========== API ENDPOINTS ==========
 
-// ✅ CREATE ORDER
+// ✅ CREATE ORDER - FIXED to accept items from frontend
 router.post("/create", async (req, res) => {
   try {
-    const { userId, paymentMethod } = req.body;
+    const { userId, paymentMethod, items: frontendItems, amount: frontendAmount } = req.body;
 
-    const cart = await Cart.findOne({ userId });
+    console.log("📦 Create order request:", { userId, paymentMethod, itemsCount: frontendItems?.length });
 
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: "Cart empty" });
+    if (!userId) {
+      return res.status(400).json({ message: "User ID required" });
     }
 
-    const items = await Promise.all(cart.items.map(async (item) => {
-      let product = await Product.findById(item.productId);
-      let source = "products";
-      
-      if (!product) {
-        product = await BestDeals.findById(item.productId);
-        source = "bestdeals";
-      }
-      
-      if (!product) {
-        product = await NewArrival.findById(item.productId);
-        source = "newarrivals";
-      }
-      
-      const imageUrl = product?.thumbnail || product?.images?.[0] || "/default-image.jpg";
-      
-      return {
-        productId: item.productId,
-        title: product?.title || "Product",
-        price: product?.price || 0,
-        quantity: item.quantity,
-        image: imageUrl,
-        source: source
-      };
-    }));
+    let items = frontendItems;
+    let amount = frontendAmount;
 
-    const amount = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    // If frontend didn't send items, fetch from cart
+    if (!items || items.length === 0) {
+      const cart = await Cart.findOne({ userId });
+
+      if (!cart || cart.items.length === 0) {
+        return res.status(400).json({ message: "Cart empty" });
+      }
+
+      items = await Promise.all(cart.items.map(async (item) => {
+        let product = await Product.findById(item.productId);
+        let source = "products";
+        
+        if (!product) {
+          product = await BestDeals.findById(item.productId);
+          source = "bestdeals";
+        }
+        if (!product) {
+          product = await NewArrival.findById(item.productId);
+          source = "newarrivals";
+        }
+        if (!product) {
+          product = await Fashion.findById(item.productId);
+          source = "fashion";
+        }
+        if (!product) {
+          product = await Furniture.findById(item.productId);
+          source = "furniture";
+        }
+        if (!product) {
+          product = await HealthBeauty.findById(item.productId);
+          source = "healthbeauty";
+        }
+        if (!product) {
+          product = await SmartphoneTablet.findById(item.productId);
+          source = "smartphonetablet";
+        }
+        if (!product) {
+          product = await Electronics.findById(item.productId);
+          source = "electronics";
+        }
+        if (!product) {
+          product = await Jewelry.findById(item.productId);
+          source = "jewelry";
+        }
+        
+        const imageUrl = product?.thumbnail || product?.images?.[0] || "/default-image.jpg";
+        
+        return {
+          productId: item.productId,
+          title: product?.title || "Product",
+          price: product?.price || 0,
+          quantity: item.quantity,
+          image: imageUrl,
+          source: source
+        };
+      }));
+
+      amount = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    }
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: "No items to order" });
+    }
 
     const order = await Order.create({
       userId,
       items,
       amount,
-      paymentMethod,
+      paymentMethod: paymentMethod || "UPI",
       timeline: [{ status: "ORDER CREATED", date: new Date() }]
     });
 
+    // Clear cart after order creation
     await Cart.findOneAndUpdate({ userId }, { items: [] });
+
+    console.log("✅ Order created:", order._id);
 
     res.json({ orderId: order._id, message: "Order created successfully" });
 

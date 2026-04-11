@@ -7,11 +7,8 @@ import { useNavigate } from "react-router-dom";
 function Addpay() {
   const [address, setAddress] = useState(null);
 
-
   const { cart, paymentMethod, updateQuantity } = useCart();
-
   const navigate = useNavigate();
-//   const handleNavigate = () => navigate("/payPage");
 
   const totalPrice = cart.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -19,7 +16,6 @@ function Addpay() {
   );
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-
 
   const increaseQty = (id, qty) => {
     updateQuantity(id, qty + 1);
@@ -57,35 +53,53 @@ function Addpay() {
 
     fetchAddress();
   }, []);
-const createOrder = async () => {
-  try {
-    const res = await fetch("https://zenvy-store.onrender.com/api/order/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: localStorage.getItem("userId"),
-        paymentMethod,
-      }),
-    });
 
-    const data = await res.json();
+  const createOrder = async () => {
+    try {
+      // ✅ FIX: Transform cart items to match backend expected format
+      const itemsForOrder = cart.map((item) => ({
+        productId: item.id,
+        title: item.title,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+        source: "products"
+      }));
 
-    if (!data.orderId) {
-      alert("Order failed ❌");
-      return;
+      console.log("📦 Sending order with items:", itemsForOrder);
+      console.log("👤 User ID:", localStorage.getItem("userId"));
+      console.log("💳 Payment Method:", paymentMethod);
+
+      const res = await fetch("https://zenvy-store.onrender.com/api/order/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: localStorage.getItem("userId"),
+          paymentMethod,
+          items: itemsForOrder,  // ✅ Now sending cart items!
+          amount: totalPrice
+        }),
+      });
+
+      const data = await res.json();
+      console.log("📨 Order response:", data);
+
+      if (!data.orderId) {
+        alert("Order failed ❌");
+        return;
+      }
+
+      localStorage.setItem("orderId", data.orderId);
+      navigate("/payPage");
+    } catch (err) {
+      console.error("Order creation error:", err);
+      alert("Server error ❌");
     }
+  };
 
-    localStorage.setItem("orderId", data.orderId);
-
-    navigate("/payPage");
-  } catch (err) {
-    console.error(err);
-    alert("Server error ❌");
-  }
-};
-
+  // Rest of your component remains exactly the same...
   return (
     <>
       <style>
@@ -152,7 +166,6 @@ const createOrder = async () => {
           color: white;
         }
 
-        /* 🔥 GRADIENT BUTTON */
         .gradient-btn {
           background: linear-gradient(135deg, #ff4b2b, #ff416c);
           border: none;
@@ -212,7 +225,6 @@ const createOrder = async () => {
             <div className="section-box">
               <div className="section-title d-flex justify-content-between">
                 Pay by scanning the QR code
-                {/* <a href="/address" className="small-link">Change</a> */}
               </div>
               <p className="small-text">
                 A UPI QR code will appear on the next page.
