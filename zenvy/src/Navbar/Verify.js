@@ -8,7 +8,7 @@ import logo from '../assets/images/output-onlinepngtools.png';
 function Verify() {
   const navigate = useNavigate();
   const [otp, setOtp] = useState("");
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(60); // Changed from 30 to 60 seconds
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -62,8 +62,8 @@ function Verify() {
       console.log("Resend response:", data);
 
       if (res.ok) {
-        toast.success("OTP resent successfully! 📧");
-        setTimer(30);
+        toast.success("OTP resent successfully! 📧 Please check your email.");
+        setTimer(60); // Reset to 60 seconds
         setCanResend(false);
       } else {
         toast.error(data.message || "Failed to resend OTP");

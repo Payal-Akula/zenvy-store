@@ -248,10 +248,9 @@ function Create() {
               </div>
             )}
 
-            <div className="text small mt-3 fw-semibold mb-3" style={{ fontSize: "clamp(11px, 3vw, 13px)" }}>
-              To verify your email, we'll send an OTP to your email address.
-            </div>
-
+           <div className="text small mt-3 fw-semibold mb-3" style={{ fontSize: "clamp(11px, 3vw, 13px)" }}>
+  To verify your email, we'll send an OTP to your email address. OTP valid for 5 minutes.
+</div>
             <div className="d-grid">
               <button 
                 type="submit" 
