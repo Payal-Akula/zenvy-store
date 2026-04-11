@@ -6,10 +6,10 @@ const { generateToken } = require("./jwtservice")
 dotenv.config()
 
 // Configure SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+sgMail.setApiKey(process.env.SENDGRID_API)
 
 console.log("📧 Email Service Initialized with SendGrid");
-console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY ? "✅ Set" : "❌ Not Set");
+console.log("SendGrid API Key:", process.env.SENDGRID_API ? "✅ Set" : "❌ Not Set");
 console.log("From Email:", process.env.EMAIL ? "✅ Set" : "❌ Not Set");
 
 function sendOtpEmail(email, otp) {
