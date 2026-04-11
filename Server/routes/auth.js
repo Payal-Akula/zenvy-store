@@ -32,17 +32,17 @@ router.post("/otp/verify", async (req, res) => {
         const { email, otp, fullName, mobileNumber, password } = req.body;
         
         console.log("📨 Received OTP verification request for:", email);
-        console.log("Received data:", { email, otp, fullName, mobileNumber, password: password ? "***" : "missing" });
+        console.log("OTP received:", otp);
+        console.log("FullName:", fullName);
+        console.log("MobileNumber:", mobileNumber);
 
         // Validate email
         if (!emailRegex.test(email)) {
-            console.log("❌ Invalid email format");
             return res.status(400).json({ message: "Invalid email format" });
         }
         
         // Validate OTP
         if (!otp || otp.toString().length !== 6 || isNaN(Number(otp))) {
-            console.log("❌ Invalid OTP format:", otp);
             return res.status(400).json({ message: "Invalid OTP format. Please enter 6 digits." });
         }
 
@@ -56,13 +56,13 @@ router.post("/otp/verify", async (req, res) => {
             const currentDate = new Date();
             currentDate.setDate(currentDate.getDate() + 28);
             res.cookie("jwt-token", result.token, { expires: currentDate });
-            console.log("✅ Cookie set for user:", email);
         }
 
-        res.status(result.statusCode).json({
+        return res.status(result.statusCode).json({
             message: result.message,
             user: result.user,
-            token: result.token
+            token: result.token,
+            statusCode: result.statusCode
         });
         
     } catch (error) {
