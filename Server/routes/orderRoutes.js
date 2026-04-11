@@ -5,19 +5,17 @@ const Cart = require("../models/Cart");
 const Product = require("../models/products");
 const BestDeals = require("../models/BestDeals");
 const PDFDocument = require('pdfkit');
-const nodemailer = require("nodemailer");
+const sgMail = require('@sendgrid/mail');
 const NewArrival = require("../models/NewArrival"); 
 
-// Email transporter setup
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+// Configure SendGrid (same as your authService)
+sgMail.setApiKey(process.env.SENDGRID_API);
 
-// ========== EMAIL FUNCTIONS ==========
+console.log("📧 Order Email Service Initialized with SendGrid");
+console.log("SendGrid API Key:", process.env.SENDGRID_API ? "✅ Set" : "❌ Not Set");
+console.log("From Email:", process.env.EMAIL ? "✅ Set" : "❌ Not Set");
+
+// ========== EMAIL FUNCTIONS with SendGrid ==========
 
 // Function to send order confirmation email
 const sendOrderEmail = async (email, orderData) => {
@@ -29,12 +27,12 @@ const sendOrderEmail = async (email, orderData) => {
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price * item.quantity}</td>
-    </tr>
+     </tr>
   `).join('');
 
-  const mailOptions = {
-    from: `"Zenvy" <${process.env.EMAIL}>`,
+  const msg = {
     to: email,
+    from: process.env.EMAIL,
     subject: `Zenvy Order Confirmed 🎉 | ${orderId}`,
     html: `
       <table width="100%" bgcolor="#f6f6f6">
@@ -42,8 +40,7 @@ const sendOrderEmail = async (email, orderData) => {
           <table width="600" bgcolor="#ffffff" style="border-radius:10px; overflow:hidden;">
             <tr><td align="center" bgcolor="#e12727" style="padding:15px;">
               <h2 style="color:#fff; margin:0;">ZENVY</h2>
-              </td>
-            </tr>
+            </td></tr>
             <tr><td style="padding:20px; font-family:Arial;">
               <h2 style="color:#e12727;">🎉 Order Confirmed!</h2>
               <p>Hi <b>${user.name}</b>,</p>
@@ -73,24 +70,29 @@ const sendOrderEmail = async (email, orderData) => {
                 </tfoot>
               </table>
               <div style="text-align:center; margin-top:20px;">
-                <a href="http://localhost:3003/orders" style="background:#e12727; color:#fff; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block;">
+                <a href="https://zenvy-store.onrender.com/orders" style="background:#e12727; color:#fff; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block;">
                   📦 View My Orders
                 </a>
               </div>
               <p style="margin-top:20px;">Thanks for shopping with <b>Zenvy</b> ❤️</p>
-              </td>
-            </tr>
+            </td></tr>
             <tr><td align="center" bgcolor="#111" style="color:#aaa; padding:10px; font-size:12px;">
               © 2026 Zenvy
-              </td>
-            </tr>
+            </td></tr>
           </table>
-          </td>
-        </tr>
+        </td></tr>
       </table>
     `
   };
-  return transporter.sendMail(mailOptions);
+  
+  try {
+    await sgMail.send(msg);
+    console.log(`✅ Order confirmation email sent to: ${email}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Failed to send order email to ${email}:`, error.message);
+    return false;
+  }
 };
 
 // Send status update email (SHIPPED/DELIVERED)
@@ -112,9 +114,9 @@ const sendStatusUpdateEmail = async (email, order, status) => {
     buttonText = "Write a Review";
   }
   
-  const mailOptions = {
-    from: `"Zenvy" <${process.env.EMAIL}>`,
+  const msg = {
     to: email,
+    from: process.env.EMAIL,
     subject: subject,
     html: `
       <table width="100%" bgcolor="#f6f6f6">
@@ -122,8 +124,7 @@ const sendStatusUpdateEmail = async (email, order, status) => {
           <table width="600" bgcolor="#ffffff" style="border-radius:10px; overflow:hidden;">
             <tr><td align="center" bgcolor="#e12727" style="padding:15px;">
               <h2 style="color:#fff; margin:0;">ZENVY</h2>
-              </td>
-            </tr>
+            </td></tr>
             <tr><td style="padding:20px; font-family:Arial;">
               <h2 style="color:${color};">${status === "SHIPPED" ? "🚚 Order Shipped!" : "📦 Order Delivered!"}</h2>
               <p>Hi <b>${order.userDetails?.name || "Customer"}</b>,</p>
@@ -134,28 +135,35 @@ const sendStatusUpdateEmail = async (email, order, status) => {
                 <tr><td><b>Amount:</b> ₹${order.amount}</td></tr>
               </table>
               <div style="text-align:center; margin-top:20px;">
-                <a href="http://localhost:3003/track/${order._id}" 
+                <a href="https://zenvy-store.onrender.com/track/${order._id}" 
                    style="background:${color}; color:#fff; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block;">
                   ${buttonText}
                 </a>
               </div>
               <p style="margin-top:20px;">Thank you for shopping with <b>Zenvy</b>! ❤️</p>
-              </td>
-            </tr>
+            </td></tr>
             <tr><td align="center" bgcolor="#111" style="color:#aaa; padding:10px; font-size:12px;">
               © 2026 Zenvy
-              </td>
-            </tr>
+            </td></tr>
           </table>
-          </td>
-        </tr>
+        </td></tr>
       </table>
     `
   };
-  return transporter.sendMail(mailOptions);
+  
+  try {
+    await sgMail.send(msg);
+    console.log(`✅ Status update email sent to: ${email} for status: ${status}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Failed to send status email to ${email}:`, error.message);
+    return false;
+  }
 };
 
-// ========== AUTO STATUS UPDATE FUNCTION ==========
+// ========== REST OF YOUR CODE (NO CHANGES) ==========
+
+// Auto status update function (same as before)
 const updateOrderStatuses = async () => {
   try {
     const now = new Date();
@@ -171,14 +179,12 @@ const updateOrderStatuses = async () => {
       if (placedDate) {
         const hoursSincePlaced = (now - new Date(placedDate)) / (1000 * 60 * 60);
         
-        // After 48 hours (2 days), update to SHIPPED
         if (hoursSincePlaced >= 48) {
           order.status = "SHIPPED";
           order.timeline.push({ status: "SHIPPED", date: now });
           await order.save();
           console.log(`✅ Order ${order._id} updated to SHIPPED`);
           
-          // Send shipping email notification
           if (order.userDetails?.email) {
             await sendStatusUpdateEmail(order.userDetails.email, order, "SHIPPED");
           }
@@ -197,14 +203,12 @@ const updateOrderStatuses = async () => {
       if (shippedDate) {
         const hoursSinceShipped = (now - new Date(shippedDate)) / (1000 * 60 * 60);
         
-        // After 120 hours (5 days), update to DELIVERED
         if (hoursSinceShipped >= 120) {
           order.status = "DELIVERED";
           order.timeline.push({ status: "DELIVERED", date: now });
           await order.save();
           console.log(`✅ Order ${order._id} updated to DELIVERED`);
           
-          // Send delivery confirmation email
           if (order.userDetails?.email) {
             await sendStatusUpdateEmail(order.userDetails.email, order, "DELIVERED");
           }
@@ -219,21 +223,19 @@ const updateOrderStatuses = async () => {
 
 // Start auto status update service
 const startAutoStatusUpdate = () => {
-  // Run every 6 hours
   setInterval(async () => {
     console.log(`[${new Date().toISOString()}] 🔄 Running auto status update check...`);
     await updateOrderStatuses();
-  }, 6 * 60 * 60 * 1000); // Every 6 hours
+  }, 6 * 60 * 60 * 1000);
   
   console.log("✅ Auto order status update service started (checks every 6 hours)");
   
-  // Also run once on startup
   setTimeout(async () => {
     await updateOrderStatuses();
   }, 5000);
 };
 
-// ========== API ENDPOINTS ==========
+// ========== API ENDPOINTS (NO CHANGES TO YOUR DESIGN) ==========
 
 // ✅ CREATE ORDER
 router.post("/create", async (req, res) => {
@@ -282,7 +284,6 @@ router.post("/create", async (req, res) => {
       timeline: [{ status: "ORDER CREATED", date: new Date() }]
     });
 
-    // Clear cart after order creation
     await Cart.findOneAndUpdate({ userId }, { items: [] });
 
     res.json({ orderId: order._id, message: "Order created successfully" });
@@ -313,7 +314,7 @@ router.post("/confirm/:id", async (req, res) => {
 
     await order.save();
 
-    // Send email confirmation
+    // Send email confirmation using SendGrid
     try {
       await sendOrderEmail(user.email, {
         orderId: order._id,
@@ -382,7 +383,6 @@ router.post("/update-status/:id", async (req, res) => {
     order.timeline.push({ status: status, date: new Date() });
     await order.save();
     
-    // Send email notification for manual status update
     if (order.userDetails?.email && (status === "SHIPPED" || status === "DELIVERED")) {
       await sendStatusUpdateEmail(order.userDetails.email, order, status);
     }
@@ -393,7 +393,7 @@ router.post("/update-status/:id", async (req, res) => {
   }
 });
 
-// ✅ FORCE RUN STATUS UPDATE (admin endpoint)
+// ✅ FORCE RUN STATUS UPDATE
 router.post("/force-status-update", async (req, res) => {
   try {
     await updateOrderStatuses();
@@ -486,7 +486,6 @@ router.post("/return", async (req, res) => {
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // Check if order is eligible for return (within 7 days of delivery)
     const deliveredDate = order.timeline.find(t => t.status === "DELIVERED")?.date;
     if (deliveredDate) {
       const daysSinceDelivery = (new Date() - new Date(deliveredDate)) / (1000 * 60 * 60 * 24);
@@ -518,7 +517,6 @@ router.post("/exchange", async (req, res) => {
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // Check if order is eligible for exchange (within 3 days of delivery)
     const deliveredDate = order.timeline.find(t => t.status === "DELIVERED")?.date;
     if (deliveredDate) {
       const daysSinceDelivery = (new Date() - new Date(deliveredDate)) / (1000 * 60 * 60 * 24);
@@ -542,7 +540,7 @@ router.post("/exchange", async (req, res) => {
   }
 });
 
-// Start the auto status update service when server starts
+// Start the auto status update service
 startAutoStatusUpdate();
 
 module.exports = router;

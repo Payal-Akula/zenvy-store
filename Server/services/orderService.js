@@ -21,7 +21,7 @@ const sendOrderEmail = async (email, order) => {
 <tr><td align="center">
 
 <table width="600" bgcolor="#ffffff" style="border-radius:10px; overflow:hidden;">
-
+ 
 <tr>
 <td align="center" bgcolor="#e12727" style="padding:15px;">
 <img src="https://i.imgur.com/6X4ZQZC.png" height="40"/>

@@ -15,7 +15,6 @@ console.log("From Email:", process.env.EMAIL ? "✅ Set" : "❌ Not Set");
 function sendOtpEmail(email, otp) {
     console.log(`📧 Preparing email with OTP: ${otp} for: ${email}`);
     
-    // SIMPLE PLAIN TEXT EMAIL - Less likely to go to spam
     const msg = {
         to: email,
         from: process.env.EMAIL,
@@ -43,7 +42,7 @@ Team Zenvy
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-        <div style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px 10px 0 0; margin: -20px -20px 0 -20px;">
+        <div style="text-align: center; background-color="#e12727"; padding: 20px; border-radius: 10px 10px 0 0; margin: -20px -20px 0 -20px;">
             <h1 style="color: white; margin: 0;">Zenvy</h1>
         </div>
         
@@ -53,7 +52,7 @@ Team Zenvy
             <p style="font-size: 16px;">Your OTP for account verification is:</p>
             
             <div style="text-align: center; margin: 30px 0;">
-                <div style="font-size: 40px; font-weight: bold; letter-spacing: 10px; color: #667eea; background: #f0f0f0; padding: 15px; border-radius: 8px; display: inline-block;">
+                <div style="font-size: 40px; font-weight: bold; letter-spacing: 10px; color: #e12727; background: #f0f0f0; padding: 15px; border-radius: 8px; display: inline-block;">
                     ${otp}
                 </div>
             </div>
@@ -82,11 +81,12 @@ const sendOtp = async (email, res) => {
         let user = await User.findOne({ email });
         const currentTimeStamp = Math.floor(Date.now() / 1000);
 
-        // Check if OTP already sent recently (within last 2 minutes)
-        if (user && user.otpExpiry && user.otpExpiry > currentTimeStamp + 480) {
-            console.log(`⏰ OTP already sent recently for: ${email}`);
+        // Check if OTP already sent and still valid (not expired)
+        if (user && user.otpExpiry && user.otpExpiry > currentTimeStamp) {
+            console.log(`⏰ OTP already valid for ${email}. Expires at: ${user.otpExpiry}, Now: ${currentTimeStamp}`);
             return res.status(200).json({
-                message: "OTP already sent. Please check your email inbox or spam folder."
+                message: "OTP already sent. Please check your email inbox or spam folder.",
+                alreadySent: true
             });
         }
 
@@ -95,6 +95,7 @@ const sendOtp = async (email, res) => {
         const otpExpiry = currentTimeStamp + 600; // 10 minutes (600 seconds)
         
         console.log(`🔢 Generated OTP: ${otp} for: ${email}`);
+        console.log(`⏰ OTP will expire at: ${new Date(otpExpiry * 1000).toLocaleTimeString()}`);
 
         // Send email
         try {
@@ -155,15 +156,26 @@ const verifyOtp = async (email, otp, extraData = {}) => {
         }
 
         const currentTimeStamp = Math.floor(Date.now() / 1000);
+        
+        console.log(`⏰ Current time: ${new Date(currentTimeStamp * 1000).toLocaleTimeString()}`);
+        console.log(`⏰ OTP expiry: ${new Date(user.otpExpiry * 1000).toLocaleTimeString()}`);
+        console.log(`⏰ Time remaining: ${user.otpExpiry - currentTimeStamp} seconds`);
 
+        // Check if OTP is expired
         if (user.otpExpiry < currentTimeStamp) {
-            console.log(`⏰ OTP expired for: ${email}. Expiry: ${user.otpExpiry}, Now: ${currentTimeStamp}`);
+            console.log(`⏰ OTP EXPIRED for: ${email}`);
+            // Clear expired OTP
+            user.otp = undefined;
+            user.otpExpiry = undefined;
+            await user.save();
             return {
                 statusCode: 410,
-                message: "OTP expired. Please request a new one."
+                message: "OTP has expired. Please request a new OTP.",
+                expired: true
             };
         }
 
+        // Check if OTP matches
         if (user.otp !== Number(otp)) {
             console.log(`❌ Invalid OTP for: ${email}. Expected: ${user.otp}, Got: ${otp}`);
             return { statusCode: 400, message: "Invalid OTP. Please try again." };

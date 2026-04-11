@@ -434,7 +434,7 @@ function TrackOrder() {
           <hr />
           <h6 className="mb-3"><i className="bi bi-clock-history text-danger me-2"></i>Order Timeline</h6>
           <div className="timeline">
-            {timeline.map((t, i) => (
+            {timeline.map((t, i) => ( 
               <div key={i} className="d-flex mb-3">
                 <div className="me-3">
                   <div className="bg-success rounded-circle" style={{ width: "12px", height: "12px", marginTop: "5px" }}></div>
