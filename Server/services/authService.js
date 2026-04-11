@@ -10,12 +10,12 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 console.log("📧 Email Service Initialized with SendGrid");
 console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY ? "✅ Set" : "❌ Not Set");
-console.log("From Email:", process.env.EMAIL_FROM ? "✅ Set" : "❌ Not Set");
+console.log("From Email:", process.env.EMAIL ? "✅ Set" : "❌ Not Set");
 
 function sendOtpEmail(email, otp) {
     const msg = {
         to: email,
-        from: process.env.EMAIL_FROM,
+        from: process.env.EMAIL,
         subject: "Your Zenvy OTP for Secure Login",
         html: `
 <!DOCTYPE html>
