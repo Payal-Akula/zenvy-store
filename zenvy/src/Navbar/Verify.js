@@ -8,9 +8,10 @@ import logo from '../assets/images/output-onlinepngtools.png';
 function Verify() {
   const navigate = useNavigate();
   const [otp, setOtp] = useState("");
-  const [timer, setTimer] = useState(60); // Changed from 30 to 60 seconds
+  const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   useEffect(() => {
     // Check if signupData exists
@@ -19,7 +20,7 @@ function Verify() {
       toast.error("Session expired. Please sign up again.");
       setTimeout(() => {
         navigate("/register");
-      }, 1500);
+      }, 2000);
       return;
     }
 
@@ -45,7 +46,7 @@ function Verify() {
       return;
     }
 
-    setLoading(true);
+    setResendLoading(true);
 
     try {
       console.log("Resending OTP to:", signupData.email);
@@ -62,8 +63,8 @@ function Verify() {
       console.log("Resend response:", data);
 
       if (res.ok) {
-        toast.success("OTP resent successfully! 📧 Please check your email.");
-        setTimer(60); // Reset to 60 seconds
+        toast.success("OTP resent successfully! 📧 Please check your email inbox and spam folder.");
+        setTimer(60);
         setCanResend(false);
       } else {
         toast.error(data.message || "Failed to resend OTP");
@@ -72,7 +73,7 @@ function Verify() {
       console.error("Error resending OTP:", error);
       toast.error("Server error. Please try again.");
     } finally {
-      setLoading(false);
+      setResendLoading(false);
     }
   };
 
@@ -94,6 +95,7 @@ function Verify() {
 
     try {
       console.log("Verifying OTP for:", signupData.email);
+      console.log("OTP entered:", otp);
       
       const res = await fetch("https://zenvy-store.onrender.com/auth/otp/verify", {
         method: "POST",
@@ -131,6 +133,9 @@ function Verify() {
         setTimeout(() => {
           navigate("/");
         }, 2000);
+      } else if (data.statusCode === 410) {
+        toast.error("OTP expired! Please request a new OTP.");
+        setCanResend(true);
       } else {
         toast.error(data.message || "Invalid OTP. Please try again.");
       }
@@ -148,7 +153,7 @@ function Verify() {
       
       <div className="d-flex justify-content-center align-items-center text-center mt-5 px-3">
         <a href="/" className="text-decoration-none text-black">
-          <img src={logo} alt="logo" height="70px" className="mb-4 logo-img" />
+          <img src={logo} alt="logo" height="70px" className="mb-4 logoimg" />
         </a>
       </div>
 
@@ -158,8 +163,8 @@ function Verify() {
             Verify OTP
           </h1>
           
-          <p className="text-muted small mt-2" style={{ fontSize: "clamp(11px, 3vw, 13px)" }}>
-            Enter the 6-digit OTP sent to your email
+          <p className="text-muted small mt-2" style={{ fontSize: "clamp(11px, 3vw, 13px) "}}>
+            Enter the 6-digit OTP sent to your email. Please check your spam folder if not found.
           </p>
 
           <input
@@ -191,12 +196,18 @@ function Verify() {
                   onClick={handleResendOTP}
                   style={{ color: "#0a637e", cursor: "pointer" }}
                 >
-                  Resend OTP
+                  {resendLoading ? "Sending..." : "Resend OTP"}
                 </span>
               ) : (
                 <span className="text-muted">Resend in {timer}s</span>
               )}
             </span>
+          </div>
+          
+          <div className="text-center mt-3">
+            <small className="text-muted">
+              💡 Tip: Check your spam/junk folder if you don't see the email in your inbox.
+            </small>
           </div>
         </div>
       </div>
