@@ -6,7 +6,6 @@ const { generateToken } = require("../services/jwtservice");
 
 const router = Router()
 
-// FIXED: Added async/await and proper error handling
 router.post("/otp/send", async (req, res) => {
     try {
         const email = req.body.email
@@ -17,7 +16,6 @@ router.post("/otp/send", async (req, res) => {
             return res.status(400).json({ message: "Invalid email address" });
         }
         
-        // Call sendOtp and wait for it to complete
         await sendOtp(email, res);
         
     } catch (error) {
@@ -34,10 +32,18 @@ router.post("/otp/verify", async (req, res) => {
         const { email, otp, fullName, mobileNumber, password } = req.body;
         
         console.log("📨 Received OTP verification request for:", email);
+        console.log("Received data:", { email, otp, fullName, mobileNumber, password: password ? "***" : "missing" });
 
-        if (!emailRegex.test(email) || !otp || otp.length !== 6 || isNaN(Number(otp))) {
-            console.log("❌ Invalid payload:", { email, otp });
-            return res.status(400).json({ message: "Invalid Payload" });
+        // Validate email
+        if (!emailRegex.test(email)) {
+            console.log("❌ Invalid email format");
+            return res.status(400).json({ message: "Invalid email format" });
+        }
+        
+        // Validate OTP
+        if (!otp || otp.toString().length !== 6 || isNaN(Number(otp))) {
+            console.log("❌ Invalid OTP format:", otp);
+            return res.status(400).json({ message: "Invalid OTP format. Please enter 6 digits." });
         }
 
         const result = await verifyOtp(email, Number(otp), {
