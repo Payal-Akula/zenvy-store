@@ -13,11 +13,48 @@ console.log("SendGrid API Key:", process.env.SENDGRID_API ? "✅ Set" : "❌ Not
 console.log("From Email:", process.env.EMAIL ? "✅ Set" : "❌ Not Set");
 
 function sendOtpEmail(email, otp) {
+    console.log(`📧 Preparing email with OTP: ${otp} for: ${email}`);
+    
     const msg = {
         to: email,
         from: process.env.EMAIL,
         subject: "Your Zenvy OTP for Secure Login",
-        html: `...` // Your HTML template (same as before)
+        html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="color: white; margin: 0;">Zenvy</h1>
+    </div>
+    
+    <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
+        <p style="font-size: 16px;">Hello,</p>
+        
+        <p style="font-size: 16px;">We received a request to create an account or sign in to your <strong>Zenvy</strong> account.</p>
+        
+        <p style="font-size: 16px;">Use the One-Time Password (OTP) below to complete your verification:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <div style="font-size: 48px; font-weight: bold; letter-spacing: 8px; color: #667eea; background: #f5f5f5; padding: 20px; border-radius: 8px; display: inline-block; font-family: monospace;">
+                ${otp}
+            </div>
+        </div>
+        
+        <p style="font-size: 14px; color: #666;">This OTP is valid for the next <strong>5 minutes</strong>. Please do not share it with anyone for security reasons.</p>
+        
+        <p style="font-size: 14px; color: #666;">If you did not request this login, you can safely ignore this email.</p>
+        
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
+        
+        <p style="font-size: 14px; color: #999;">Thanks,<br/>Team Zenvy</p>
+    </div>
+</body>
+</html>
+`
     };
     return sgMail.send(msg);
 }
@@ -30,21 +67,13 @@ const sendOtp = async (email, res) => {
         const user = await User.findOne({ email });
         const currentTimeStamp = Math.floor(Date.now() / 1000);
 
-        // Check if OTP already sent and still valid
-        if (user && user.otpExpiry && user.otpExpiry > currentTimeStamp) {
-            console.log(`⏰ OTP already sent recently for: ${email}`);
-            // Don't return error - just let them know
-            return res.status(200).json({
-                message: "OTP already sent to your email. Please check your inbox."
-            });
-        }
-
+        // Generate OTP first
         const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpiry = currentTimeStamp + 1800;
+        const otpExpiry = currentTimeStamp + 300; // 5 minutes (300 seconds)
         
         console.log(`🔢 Generated OTP: ${otp} for: ${email}`);
 
-        // Send email using SendGrid
+        // Send email using SendGrid FIRST (faster response)
         try {
             await sendOtpEmail(email, otp);
             console.log(`✅ Email sent successfully to: ${email}`);
@@ -55,7 +84,7 @@ const sendOtp = async (email, res) => {
             });
         }
 
-        // Save OTP to database
+        // Save OTP to database AFTER email is sent
         if (user) {
             user.otp = otp;
             user.otpExpiry = otpExpiry;
@@ -88,7 +117,6 @@ const sendOtp = async (email, res) => {
 const verifyOtp = async (email, otp, extraData = {}) => {
     try {
         console.log(`🔐 Verifying OTP for: ${email}, OTP: ${otp}`);
-        console.log(`📦 Extra data received:`, extraData);
         
         const user = await User.findOne({ email });
 
@@ -121,37 +149,28 @@ const verifyOtp = async (email, otp, extraData = {}) => {
 
         const { fullName, mobileNumber, password } = extraData;
 
-        // Update user data
         if (fullName) {
             user.fullName = fullName;
-            console.log(`📝 Updated fullName: ${fullName}`);
         }
 
         if (mobileNumber) {
             user.mobileNumber = mobileNumber;
-            console.log(`📝 Updated mobileNumber: ${mobileNumber}`);
         }
 
         if (password) {
             user.password = password;
-            console.log(`📝 Updated password`);
         }
 
-        // Clear OTP data
         user.otp = undefined;
         user.otpExpiry = undefined;
         user.updatedAt = currentTimeStamp;
 
         await user.save();
-        console.log(`💾 User data saved for: ${email}`);
 
-        // Generate JWT token
         const token = generateToken({
             id: user._id,
             role: user.role || "USER"
         });
-
-        console.log(`🎫 Token generated for user: ${email}`);
 
         return {
             statusCode: 200,
