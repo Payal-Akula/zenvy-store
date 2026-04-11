@@ -42,7 +42,7 @@ Team Zenvy
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-        <div style="text-align: center; background-color="#e12727"; padding: 20px; border-radius: 10px 10px 0 0; margin: -20px -20px 0 -20px;">
+        <div style="text-align: center; background-color: #e12727; padding: 20px; border-radius: 10px 10px 0 0; margin: -20px -20px 0 -20px;">
             <h1 style="color: white; margin: 0;">Zenvy</h1>
         </div>
         
@@ -81,13 +81,15 @@ const sendOtp = async (email, res) => {
         let user = await User.findOne({ email });
         const currentTimeStamp = Math.floor(Date.now() / 1000);
 
-        // Check if OTP already sent and still valid (not expired)
+        // FIXED: Better check for existing valid OTP
         if (user && user.otpExpiry && user.otpExpiry > currentTimeStamp) {
-            console.log(`⏰ OTP already valid for ${email}. Expires at: ${user.otpExpiry}, Now: ${currentTimeStamp}`);
-            return res.status(200).json({
-                message: "OTP already sent. Please check your email inbox or spam folder.",
-                alreadySent: true
-            });
+            console.log(`⏰ OTP already valid for ${email}. Expires in ${user.otpExpiry - currentTimeStamp} seconds`);
+            
+            // Instead of error, resend with new OTP but clear old one
+            console.log(`🔄 Clearing old OTP and sending new one...`);
+            user.otp = undefined;
+            user.otpExpiry = undefined;
+            await user.save();
         }
 
         // Generate 6-digit OTP
@@ -97,14 +99,14 @@ const sendOtp = async (email, res) => {
         console.log(`🔢 Generated OTP: ${otp} for: ${email}`);
         console.log(`⏰ OTP will expire at: ${new Date(otpExpiry * 1000).toLocaleTimeString()}`);
 
-        // Send email
+        // Send email first
         try {
             await sendOtpEmail(email, otp);
             console.log(`✅ Email sent successfully to: ${email}`);
         } catch (emailError) {
             console.error(`❌ Failed to send email to ${email}:`, emailError.message);
             return res.status(500).json({ 
-                message: "Failed to send OTP email. Please try again later." 
+                message: "Failed to send OTP email. Please check your email configuration." 
             });
         }
 
@@ -115,6 +117,7 @@ const sendOtp = async (email, res) => {
             await user.save();
             console.log(`💾 OTP updated for existing user: ${email}`);
         } else {
+            // Create new user with only email (incomplete registration)
             user = await User.create({
                 email,
                 otp,
@@ -122,7 +125,7 @@ const sendOtp = async (email, res) => {
                 createdAt: currentTimeStamp,
                 updatedAt: currentTimeStamp
             });
-            console.log(`💾 New user created with OTP: ${email}`);
+            console.log(`💾 New temporary user created with OTP: ${email}`);
         }
 
         return res.status(200).json({ 
@@ -143,7 +146,7 @@ const verifyOtp = async (email, otp, extraData = {}) => {
     try {
         console.log(`🔐 Verifying OTP for: ${email}, OTP: ${otp}`);
         
-        const user = await User.findOne({ email });
+        let user = await User.findOne({ email });
 
         if (!user) {
             console.log(`❌ User not found: ${email}`);
@@ -152,7 +155,9 @@ const verifyOtp = async (email, otp, extraData = {}) => {
 
         if (!user.otp) {
             console.log(`❌ No OTP found for: ${email}`);
-            return { statusCode: 404, message: "No OTP found. Please request a new OTP." };
+            // Clear this invalid user and ask to signup again
+            await User.deleteOne({ email });
+            return { statusCode: 404, message: "Session expired. Please sign up again." };
         }
 
         const currentTimeStamp = Math.floor(Date.now() / 1000);
@@ -164,13 +169,11 @@ const verifyOtp = async (email, otp, extraData = {}) => {
         // Check if OTP is expired
         if (user.otpExpiry < currentTimeStamp) {
             console.log(`⏰ OTP EXPIRED for: ${email}`);
-            // Clear expired OTP
-            user.otp = undefined;
-            user.otpExpiry = undefined;
-            await user.save();
+            // Clear expired OTP and user
+            await User.deleteOne({ email });
             return {
                 statusCode: 410,
-                message: "OTP has expired. Please request a new OTP.",
+                message: "OTP has expired. Please sign up again.",
                 expired: true
             };
         }
@@ -185,18 +188,18 @@ const verifyOtp = async (email, otp, extraData = {}) => {
 
         const { fullName, mobileNumber, password } = extraData;
 
-        // Update user data
-        if (fullName && !user.fullName) {
+        // Update user data (complete registration)
+        if (fullName) {
             user.fullName = fullName;
             console.log(`📝 Updated fullName: ${fullName}`);
         }
 
-        if (mobileNumber && !user.mobileNumber) {
+        if (mobileNumber) {
             user.mobileNumber = mobileNumber;
             console.log(`📝 Updated mobileNumber: ${mobileNumber}`);
         }
 
-        if (password && !user.password) {
+        if (password) {
             user.password = password;
             console.log(`📝 Updated password`);
         }
@@ -207,7 +210,7 @@ const verifyOtp = async (email, otp, extraData = {}) => {
         user.updatedAt = currentTimeStamp;
 
         await user.save();
-        console.log(`💾 User data saved for: ${email}`);
+        console.log(`💾 User fully registered for: ${email}`);
 
         // Generate JWT token
         const token = generateToken({
