@@ -1,44 +1,21 @@
 const User = require("../models/User")
-const nodemailer = require("nodemailer")
+const sgMail = require('@sendgrid/mail')
 const dotenv = require("dotenv")
 const { generateToken } = require("./jwtservice")
 
 dotenv.config()
 
-// Log email configuration for debugging
-console.log("📧 Email Service Initialized");
-console.log("Email User:", process.env.EMAIL ? "✅ Set" : "❌ Not Set");
-console.log("Email Password:", process.env.EMAIL_PASSWORD ? "✅ Set" : "❌ Not Set");
+// Configure SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
-// Create transporter with better configuration
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASSWORD,
-    },
-    // Add timeout and connection settings
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-})
-
-// Verify transporter configuration on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("❌ Email configuration error:", error.message);
-        console.error("Please check your EMAIL and EMAIL_PASSWORD in .env file");
-        console.error("Make sure you're using App Password, not your regular Gmail password");
-    } else {
-        console.log("✅ Email server is ready to send messages");
-        console.log("📧 Sending emails from:", process.env.EMAIL);
-    }
-});
+console.log("📧 Email Service Initialized with SendGrid");
+console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY ? "✅ Set" : "❌ Not Set");
+console.log("From Email:", process.env.EMAIL_FROM ? "✅ Set" : "❌ Not Set");
 
 function sendOtpEmail(email, otp) {
-    return transporter.sendMail({
-        from: `"Zenvy Team" <${process.env.EMAIL}>`,
+    const msg = {
         to: email,
+        from: process.env.EMAIL_FROM,
         subject: "Your Zenvy OTP for Secure Login",
         html: `
 <!DOCTYPE html>
@@ -76,7 +53,8 @@ function sendOtpEmail(email, otp) {
 </body>
 </html>
 `
-    });
+    };
+    return sgMail.send(msg);
 }
 
 // Send an OTP to the specified email address
@@ -87,7 +65,6 @@ const sendOtp = async (email, res) => {
         const user = await User.findOne({ email });
         const currentTimeStamp = Math.floor(Date.now() / 1000);
 
-        // Check if OTP already sent recently
         if (user && user.otpExpiry && user.otpExpiry > currentTimeStamp) {
             console.log(`⏰ OTP already sent recently for: ${email}`);
             return res.status(400).json({
@@ -95,21 +72,19 @@ const sendOtp = async (email, res) => {
             });
         }
 
-        // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpiry = currentTimeStamp + 1800; // 30 minutes
+        const otpExpiry = currentTimeStamp + 1800;
         
         console.log(`🔢 Generated OTP: ${otp} for: ${email}`);
 
-        // Send email first
+        // Send email using SendGrid
         try {
-            const emailResult = await sendOtpEmail(email, otp);
+            await sendOtpEmail(email, otp);
             console.log(`✅ Email sent successfully to: ${email}`);
-            console.log(`📧 Message ID: ${emailResult.messageId}`);
         } catch (emailError) {
             console.error(`❌ Failed to send email to ${email}:`, emailError.message);
             return res.status(500).json({ 
-                message: "Failed to send OTP email. Please check your email configuration." 
+                message: "Failed to send OTP email. Please try again later." 
             });
         }
 
@@ -136,7 +111,6 @@ const sendOtp = async (email, res) => {
 
     } catch (error) {
         console.error("❌ An error occurred while sending OTP:", error.message);
-        console.error("Stack trace:", error.stack);
         return res.status(500).json({ 
             message: "Internal server error: " + error.message 
         });
@@ -179,37 +153,28 @@ const verifyOtp = async (email, otp, extraData = {}) => {
 
         const { fullName, mobileNumber, password } = extraData;
 
-        // Update user data only for new registrations
         if (!user.fullName && fullName) {
             user.fullName = fullName;
-            console.log(`📝 Updated fullName: ${fullName}`);
         }
 
         if (!user.mobileNumber && mobileNumber) {
             user.mobileNumber = mobileNumber;
-            console.log(`📝 Updated mobileNumber: ${mobileNumber}`);
         }
 
         if (!user.password && password) {
             user.password = password;
-            console.log(`📝 Updated password`);
         }
 
-        // Clear OTP data
         user.otp = undefined;
         user.otpExpiry = undefined;
         user.updatedAt = currentTimeStamp;
 
         await user.save();
-        console.log(`💾 User data saved for: ${email}`);
 
-        // Generate JWT token
         const token = generateToken({
             id: user._id,
             role: user.role || "USER"
         });
-
-        console.log(`🎫 Token generated for user: ${email}`);
 
         return {
             statusCode: 200,
@@ -220,7 +185,6 @@ const verifyOtp = async (email, otp, extraData = {}) => {
 
     } catch (error) {
         console.error("❌ Error in verifyOtp:", error.message);
-        console.error("Stack trace:", error.stack);
         return { statusCode: 500, message: error.message };
     }
 };
