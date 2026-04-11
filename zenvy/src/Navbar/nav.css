@@ -1439,3 +1439,90 @@
 .nav-three-dropdown:hover .dropdown-menu {
   display: block !important;
 }
+/* Mobile User Info Styles */
+.mobile-user-info {
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin: 10px 0;
+}
+
+.mobile-user-greeting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-user-greeting i {
+  font-size: 40px;
+  color: white;
+}
+
+.mobile-user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-user-hello {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.mobile-user-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+}
+
+.mobile-logout-btn {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: #dc3545 !important;
+}
+
+.mobile-logout-btn:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.mobile-signin-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin: 10px 15px;
+  border-radius: 8px;
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Responsive adjustments for 320px to 768px */
+@media (max-width: 768px) {
+  .mobile-user-info {
+    padding: 12px 15px;
+  }
+  
+  .mobile-user-greeting i {
+    font-size: 35px;
+  }
+  
+  .mobile-user-name {
+    font-size: 14px;
+  }
+  
+  .mobile-user-hello {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-user-info {
+    padding: 10px 12px;
+  }
+  
+  .mobile-user-greeting i {
+    font-size: 30px;
+  }
+  
+  .mobile-user-name {
+    font-size: 13px;
+  }
+}

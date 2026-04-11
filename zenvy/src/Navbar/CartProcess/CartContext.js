@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
 const CartContext = createContext();
-const API = "http://localhost:2000/api/cart";
+const API = "https://zenvy-store.onrender.com/api/cart";
 
 export function CartProvider({ children }) {
 

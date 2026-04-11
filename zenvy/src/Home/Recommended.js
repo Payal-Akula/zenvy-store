@@ -33,7 +33,7 @@ function Recommended() {
       
       for (const category of categoryConfigs) {
         try {
-          const response = await fetch(`http://localhost:2000/api/unified/${category.endpoint}`);
+          const response = await fetch(`https://zenvy-store.onrender.com/api/unified/${category.endpoint}`);
           
           if (response.ok) {
             const data = await response.json();

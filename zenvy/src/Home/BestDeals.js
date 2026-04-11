@@ -15,7 +15,7 @@ function BestDeal() {
   const navigate = useNavigate();
   const { addToCart: addToCartContext } = useCart();  
 
-  const API_URL = "http://localhost:2000";
+  const API_URL = "https://zenvy-store.onrender.com";
 
   useEffect(() => {
     fetchDeals();

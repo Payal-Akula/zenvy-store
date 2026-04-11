@@ -29,7 +29,7 @@ function Success() {
             return;
         }
         
-        window.open(`http://localhost:2000/api/order/invoice/${id}`, '_blank');
+        window.open(`https://zenvy-store.onrender.com/api/order/invoice/${id}`, '_blank');
     };
 
     return (

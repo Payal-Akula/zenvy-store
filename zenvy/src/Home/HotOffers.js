@@ -23,7 +23,7 @@ function HotOffers() {
     setError(null);
     
     try {
-      const API_URL = "http://localhost:2000/api/best/deals";
+      const API_URL = "https://zenvy-store.onrender.com/api/best/deals";
       console.log("Fetching from:", API_URL);
       
       const response = await fetch(API_URL);

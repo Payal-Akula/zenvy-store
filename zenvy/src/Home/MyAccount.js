@@ -44,21 +44,21 @@ function MyAccount() {
       const token = localStorage.getItem("token");
       
       // Fetch orders
-      const ordersRes = await fetch(`http://localhost:2000/api/order/user/${userId}`, {
+      const ordersRes = await fetch(`https://zenvy-store.onrender.com/api/order/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const ordersData = await ordersRes.json();
       setOrders(Array.isArray(ordersData) ? ordersData : []);
 
       // Fetch addresses
-      const addressRes = await fetch("http://localhost:2000/api/address", {
+      const addressRes = await fetch("https://zenvy-store.onrender.com/api/address", {
         headers: { Authorization: `Bearer ${token}` }
       });
       const addressData = await addressRes.json();
       setAddresses(Array.isArray(addressData) ? addressData : []);
 
       // Fetch wishlist count
-      const wishlistRes = await fetch(`http://localhost:2000/api/wishlist/${userId}`, {
+      const wishlistRes = await fetch(`https://zenvy-store.onrender.com/api/wishlist/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const wishlistData = await wishlistRes.json();
@@ -94,7 +94,7 @@ function MyAccount() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:2000/user/change-password", {
+      const response = await fetch("https://zenvy-store.onrender.com/user/change-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

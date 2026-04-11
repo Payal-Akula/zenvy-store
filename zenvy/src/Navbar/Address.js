@@ -28,7 +28,7 @@ function Address() {
   const fetchdata = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:2000/api/address", {
+      const res = await fetch("https://zenvy-store.onrender.com/api/address", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -45,7 +45,7 @@ function Address() {
     if (window.confirm("Are you sure you want to delete this address?")) {
       try {
         const token = localStorage.getItem("token");
-        await fetch(`http://localhost:2000/api/address/${id}`, {
+        await fetch(`https://zenvy-store.onrender.com/api/address/${id}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,

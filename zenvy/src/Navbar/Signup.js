@@ -75,6 +75,8 @@ function Signup() {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
+        localStorage.removeItem("email");
+        localStorage.removeItem("phone");
         setUser(null);
         setOpen(false);
         // Dispatch custom event to notify other components

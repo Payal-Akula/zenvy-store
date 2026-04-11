@@ -11,7 +11,7 @@ function CategoryPage() {
   const [wishlist, setWishlist] = useState([]);
   const navigate = useNavigate();
   const { addToCart: addToCartContext } = useCart();
-  const API_URL = "http://localhost:2000";
+  const API_URL = "https://zenvy-store.onrender.com";
 
   // Map category to specific API endpoint
   const getApiUrl = () => {

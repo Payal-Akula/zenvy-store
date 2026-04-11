@@ -46,7 +46,7 @@ function Singin() {
         }
 
         try {
-            const response = await fetch("http://localhost:2000/auth/check", {
+            const response = await fetch("https://zenvy-store.onrender.com/auth/check", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -84,9 +84,9 @@ function Singin() {
                     <img
                         src={logo}
                         alt="logp"
-                        height="70px"
+                        height="30px"
                         width="auto"
-                        className="mb-4 logoimg"
+                        className="mb-4 logo-img"
                     />
                 </NavLink>
             </div>

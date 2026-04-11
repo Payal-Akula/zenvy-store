@@ -36,7 +36,7 @@ function Addpay() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:2000/api/address", {
+        const res = await fetch("https://zenvy-store.onrender.com/api/address", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -59,7 +59,7 @@ function Addpay() {
   }, []);
 const createOrder = async () => {
   try {
-    const res = await fetch("http://localhost:2000/api/order/create", {
+    const res = await fetch("https://zenvy-store.onrender.com/api/order/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

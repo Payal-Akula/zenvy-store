@@ -53,11 +53,38 @@ body {
   font-family: 'Nunito', sans-serif;
   margin: 0;
   padding: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .App {
   min-height: 100vh;
   background-color: var(--bg-primary);
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Container responsive fixes */
+.container, .container-fluid {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* Row responsive fixes */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
+}
+
+/* Column responsive fixes */
+[class*="col-"] {
+  padding-right: 15px;
+  padding-left: 15px;
 }
 
 /* Link Styles */
@@ -152,7 +179,6 @@ input:focus, textarea:focus, select:focus {
   min-height: 200px;
 }
 
-
 [data-theme="dark"] .dropdown-menu {
   background-color: var(--bg-secondary);
   border-color: var(--border-color);
@@ -177,4 +203,192 @@ input:focus, textarea:focus, select:focus {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   border-color: var(--border-color);
+}
+
+/* ========== RESPONSIVE FIXES FOR 768px AND BELOW ========== */
+
+/* Fix for 768px devices - remove side gaps */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+  
+  .App {
+    overflow-x: hidden;
+  }
+  
+  .container, 
+  .container-fluid,
+  .container-sm,
+  .container-md,
+  .container-lg,
+  .container-xl {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+  
+  /* Fix for row margins */
+  .row {
+    margin-right: -10px;
+    margin-left: -10px;
+  }
+  
+  /* Fix for columns */
+  [class*="col-"] {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+  
+  /* Remove horizontal scroll */
+  .navbar .container-fluid {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  /* Fix for cards */
+  .card {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Fix for main content areas */
+  main, 
+  .main-content,
+  .content-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: hidden;
+  }
+}
+
+/* For devices between 769px and 991px */
+@media (min-width: 769px) and (max-width: 991px) {
+  .container,
+  .container-fluid {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+  
+  .row {
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+  
+  [class*="col-"] {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+}
+
+/* For devices 320px to 575px */
+@media (max-width: 575px) {
+  .container,
+  .container-fluid {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+  
+  .row {
+    margin-right: -8px;
+    margin-left: -8px;
+  }
+  
+  [class*="col-"] {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+}
+
+/* Fix for exact 768px */
+@media (width: 768px) {
+  .container,
+  .container-fluid,
+  .container-md {
+    padding-right: 15px;
+    padding-left: 15px;
+    max-width: 100%;
+  }
+  
+  .navbar .container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+}
+
+/* Fix for landscape mode on tablets */
+@media (max-width: 768px) and (orientation: landscape) {
+  .container,
+  .container-fluid {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+}
+
+/* Ensure no overflow on all devices */
+img, 
+video, 
+iframe,
+.card,
+.card-img-top {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fix for Bootstrap grid system on mobile */
+@media (max-width: 768px) {
+  .d-none.d-md-block {
+    display: none !important;
+  }
+  
+  .d-md-none {
+    display: block !important;
+  }
+  
+  .text-center-mobile {
+    text-align: center !important;
+  }
+  
+  /* Fix for margins and paddings */
+  .mt-5 {
+    margin-top: 2rem !important;
+  }
+  
+  .mb-5 {
+    margin-bottom: 2rem !important;
+  }
+  
+  .p-4 {
+    padding: 1rem !important;
+  }
+  
+  /* Fix for flex containers */
+  .d-flex {
+    flex-wrap: wrap;
+  }
+  
+  /* Fix for gap issues */
+  .gap-3 {
+    gap: 0.5rem !important;
+  }
+  
+  .gap-4 {
+    gap: 0.75rem !important;
+  }
+}
+
+/* Fix for 768px to 991px range */
+@media (min-width: 768px) and (max-width: 991px) {
+  .d-lg-none {
+    display: block !important;
+  }
+  
+  .d-lg-flex {
+    display: none !important;
+  }
+  
+  .container-fluid {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 }

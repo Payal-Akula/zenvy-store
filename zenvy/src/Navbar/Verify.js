@@ -13,6 +13,16 @@ function Verify() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Check if signupData exists
+    const signupData = JSON.parse(localStorage.getItem("signupData"));
+    if (!signupData) {
+      toast.error("Session expired. Please sign up again.");
+      setTimeout(() => {
+        navigate("/register");
+      }, 1500);
+      return;
+    }
+
     const interval = setInterval(() => {
       if (timer > 0) {
         setTimer(timer - 1);
@@ -23,7 +33,7 @@ function Verify() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timer]);
+  }, [timer, navigate]);
 
   const handleResendOTP = async () => {
     if (!canResend) return;
@@ -31,12 +41,16 @@ function Verify() {
     const signupData = JSON.parse(localStorage.getItem("signupData"));
     if (!signupData) {
       toast.error("Session expired. Please sign up again.");
-      navigate("/create");
+      navigate("/register");
       return;
     }
 
+    setLoading(true);
+
     try {
-      const res = await fetch("http://localhost:2000/auth/otp/send", {
+      console.log("Resending OTP to:", signupData.email);
+      
+      const res = await fetch("https://zenvy-store.onrender.com/auth/otp/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -44,16 +58,21 @@ function Verify() {
         body: JSON.stringify({ email: signupData.email }),
       });
 
+      const data = await res.json();
+      console.log("Resend response:", data);
+
       if (res.ok) {
-        toast.success("OTP resent successfully!");
+        toast.success("OTP resent successfully! 📧");
         setTimer(30);
         setCanResend(false);
       } else {
-        toast.error("Failed to resend OTP");
+        toast.error(data.message || "Failed to resend OTP");
       }
     } catch (error) {
       console.error("Error resending OTP:", error);
       toast.error("Server error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,12 +87,15 @@ function Verify() {
     const signupData = JSON.parse(localStorage.getItem("signupData"));
     if (!signupData) {
       toast.error("Session expired. Please sign up again.");
-      navigate("/create");
+      navigate("/register");
+      setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch("http://localhost:2000/auth/otp/verify", {
+      console.log("Verifying OTP for:", signupData.email);
+      
+      const res = await fetch("https://zenvy-store.onrender.com/auth/otp/verify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,29 +110,29 @@ function Verify() {
       });
 
       const data = await res.json();
-      if (data.token) {
-  localStorage.setItem("token", data.token);  
-  localStorage.setItem("user", JSON.stringify(data.user)); 
-}
-      if (data.statusCode === 200) {
-        // ✅ IMPORTANT: Store userId in localStorage
-        const userId = data.user._id || data.user.id;
+      console.log("Verify response:", data);
+      
+      if (res.ok && data.token) {
+        // Store user data
+        localStorage.setItem("token", data.token);  
+        localStorage.setItem("user", JSON.stringify(data.user)); 
+        localStorage.setItem("userId", data.user._id || data.user.id);
         
-        localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("userId", userId); // This is crucial for cart
+        console.log("✅ User registered successfully:", data.user);
         
-        console.log("✅ User registered:", data.user);
-        console.log("✅ UserId stored:", userId);
-        
+        // Clear signup data
         localStorage.removeItem("signupData");
         
         toast.success("Account created successfully! 🎉");
+        
+        // Dispatch login event
+        window.dispatchEvent(new Event("userLoggedIn"));
         
         setTimeout(() => {
           navigate("/");
         }, 2000);
       } else {
-        toast.error(data.message || "Invalid OTP");
+        toast.error(data.message || "Invalid OTP. Please try again.");
       }
     } catch (error) {
       console.error("Error verifying OTP:", error);
@@ -126,17 +148,17 @@ function Verify() {
       
       <div className="d-flex justify-content-center align-items-center text-center mt-5 px-3">
         <a href="/" className="text-decoration-none text-black">
-          <img src={logo} alt="logo" height="70px" className="mb-4 logoimg" />
+          <img src={logo} alt="logo" height="70px" className="mb-4 logo-img" />
         </a>
       </div>
 
-      <div className="d-flex justify-content-center align-items-center">
-        <div className="card p-4" style={{ width: "350px" }}>
-          <h1 className="fw-semibold" style={{ fontSize: "25px", textAlign: "left" }}>
+      <div className="d-flex justify-content-center align-items-center px-3">
+        <div className="card p-4" style={{ width: "100%", maxWidth: "400px" }}>
+          <h1 className="fw-semibold" style={{ fontSize: "clamp(20px, 5vw, 25px)", textAlign: "left" }}>
             Verify OTP
           </h1>
           
-          <p className="text-muted small mt-2">
+          <p className="text-muted small mt-2" style={{ fontSize: "clamp(11px, 3vw, 13px)" }}>
             Enter the 6-digit OTP sent to your email
           </p>
 
@@ -147,7 +169,7 @@ function Verify() {
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
             maxLength="6"
-            style={{ fontSize: "24px", letterSpacing: "5px" }}
+            style={{ fontSize: "clamp(18px, 5vw, 24px)", letterSpacing: "clamp(3px, 2vw, 5px)", padding: "12px" }}
           />
 
           <div className="d-grid mb-3">
@@ -155,13 +177,14 @@ function Verify() {
               className="btn btn-danger rounded-pill" 
               onClick={handleVerify}
               disabled={loading}
+              style={{ fontSize: "clamp(12px, 3.5vw, 14px)", padding: "10px 0" }}
             >
               {loading ? "Verifying..." : "Verify & Create Account"}
             </button>
           </div>
 
           <div className="text-center">
-            <span className="text-muted small">
+            <span className="text-muted small" style={{ fontSize: "clamp(11px, 3vw, 12px)" }}>
               Didn't receive OTP?{" "}
               {canResend ? (
                 <span 

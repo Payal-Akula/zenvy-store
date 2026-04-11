@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:2000/api/address";
+const BASE_URL = "https://zenvy-store.onrender.com/api/address";
 
 export async function getAddresses() {
   const token = localStorage.getItem("token");

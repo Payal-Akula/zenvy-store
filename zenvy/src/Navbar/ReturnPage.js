@@ -36,7 +36,7 @@ function ReturnPage() {
 
   const fetchOrder = async () => {
     try {
-      const res = await fetch(`http://localhost:2000/api/order/${id}`);
+      const res = await fetch(`https://zenvy-store.onrender.com/api/order/${id}`);
       if (!res.ok) throw new Error('Order not found');
       const data = await res.json();
       setOrder(data);
@@ -64,7 +64,7 @@ function ReturnPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:2000/api/order/return", {
+      const res = await fetch("https://zenvy-store.onrender.com/api/order/return", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

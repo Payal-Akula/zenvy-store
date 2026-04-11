@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { SideBySideMagnifier } from "react-image-magnifiers";
+// import { SideBySideMagnifier } from "react-image-magnifiers";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; 
 import { useCart } from "../Navbar/CartProcess/CartContext";
@@ -20,6 +20,10 @@ function ProductPage() {
     const [loading, setLoading] = useState(false);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [error, setError] = useState(null);
+    const [zoomStyle, setZoomStyle] = useState({
+    backgroundPosition: "center",
+    backgroundSize: "100%"
+});
 
     const [colors] = useState([
         { name: "Black", code: "#201D24" },
@@ -47,7 +51,7 @@ function ProductPage() {
             // FIRST: Try to fetch from BestDeals (deals collection)
             try {
                 console.log("Trying BestDeals API...");
-                const dealsRes = await fetch(`http://localhost:2000/api/best/${id}`);
+                const dealsRes = await fetch(`https://zenvy-store.onrender.com/api/best/${id}`);
                 if (dealsRes.ok) {
                     result = await dealsRes.json();
                     console.log("Found in BestDeals:", result);
@@ -59,7 +63,7 @@ function ProductPage() {
             // SECOND: If not found in BestDeals, try Products collection
             if (!result || !result._id) {
                 try {
-                    const productsRes = await fetch(`http://localhost:2000/api/products/${id}`);
+                    const productsRes = await fetch(`https://zenvy-store.onrender.com/api/products/${id}`);
                     if (productsRes.ok) {
                         result = await productsRes.json();
                         console.log("Found in Products:", result);
@@ -72,7 +76,7 @@ function ProductPage() {
             // THIRD: Try NewArrivals collection
             if (!result || !result._id) {
                 try {
-                    const newArrivalsRes = await fetch(`http://localhost:2000/api/new/arrivals/${id}`);
+                    const newArrivalsRes = await fetch(`https://zenvy-store.onrender.com/api/new/arrivals/${id}`);
                     if (newArrivalsRes.ok) {
                         result = await newArrivalsRes.json();
                         console.log("Found in NewArrivals:", result);
@@ -85,7 +89,7 @@ function ProductPage() {
             // FOURTH: Try Unified API (covers Fashion, Furniture, Health & Beauty, Electronics)
             if (!result || !result._id) {
                 try {
-                    const unifiedRes = await fetch(`http://localhost:2000/api/unified/product/${id}`);
+                    const unifiedRes = await fetch(`https://zenvy-store.onrender.com/api/unified/product/${id}`);
                     if (unifiedRes.ok) {
                         result = await unifiedRes.json();
                         console.log("Found in Unified API:", result);
@@ -102,7 +106,7 @@ function ProductPage() {
                 if (isObjectId) {
                     const userId = localStorage.getItem("userId");
                     if (userId) {
-                        const ordersRes = await fetch(`http://localhost:2000/api/order/user/${userId}`);
+                        const ordersRes = await fetch(`https://zenvy-store.onrender.com/api/order/user/${userId}`);
                         const orders = await ordersRes.json();
                         
                         let productTitle = null;
@@ -117,7 +121,7 @@ function ProductPage() {
                         }
                         
                         if (productTitle) {
-                            const searchRes = await fetch(`http://localhost:2000/api/products/search?q=${encodeURIComponent(productTitle)}`);
+                            const searchRes = await fetch(`https://zenvy-store.onrender.com/api/products/search?q=${encodeURIComponent(productTitle)}`);
                             const searchResult = await searchRes.json();
                             if (searchResult && searchResult.length > 0) {
                                 result = searchResult[0];
@@ -125,7 +129,7 @@ function ProductPage() {
                         }
                     }
                 } else {
-                    const searchRes = await fetch(`http://localhost:2000/api/products/search?q=${encodeURIComponent(id)}`);
+                    const searchRes = await fetch(`https://zenvy-store.onrender.com/api/products/search?q=${encodeURIComponent(id)}`);
                     const searchResult = await searchRes.json();
                     if (searchResult && searchResult.length > 0) {
                         result = searchResult[0];
@@ -226,7 +230,7 @@ function ProductPage() {
     setLoading(true);
 
     try {
-        const res = await fetch("http://localhost:2000/api/wishlist/add", {
+        const res = await fetch("https://zenvy-store.onrender.com/api/wishlist/add", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -724,7 +728,7 @@ function ProductPage() {
                                 <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 10 }}>
                                     <i className="bi bi-upload fs-5"></i>
                                 </div>
-                                <SideBySideMagnifier
+                                {/* <SideBySideMagnifier
                                     imageSrc={main}
                                     imageAlt="main product image"
                                     largeImageSrc={main}
@@ -743,7 +747,47 @@ function ProductPage() {
                                     className="main-image-magnifier"
                                     style={{ width: "100%", cursor: "zoom-in" }}
                                     onImageClick={() => setShowLarge(true)}
-                                />
+                                /> */}
+                                <div
+    className="main-image-magnifier"
+    style={{
+        width: "100%",
+        height: "100%",
+        backgroundImage: `url(${main})`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: zoomStyle.backgroundPosition,
+        backgroundSize: zoomStyle.backgroundSize,
+        cursor: "zoom-in"
+    }}
+    onMouseMove={(e) => {
+        const { left, top, width, height } = e.target.getBoundingClientRect();
+        const x = ((e.clientX - left) / width) * 100;
+        const y = ((e.clientY - top) / height) * 100;
+
+        setZoomStyle({
+            backgroundPosition: `${x}% ${y}%`,
+            backgroundSize: "200%"
+        });
+    }}
+    onMouseLeave={() => {
+        setZoomStyle({
+            backgroundPosition: "center",
+            backgroundSize: "100%"
+        });
+    }}
+    onClick={() => setShowLarge(true)}
+>
+    <img
+        src={main}
+        alt="product"
+        style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            opacity: zoomStyle.backgroundSize === "200%" ? 0 : 1
+        }}
+    />
+</div>
                                 <div className='d-flex justify-content-center mt-2'>
                                     <button className='btn btn-sm btn-outline-secondary' onClick={() => setShowLarge(true)}>
                                         Click to see full view

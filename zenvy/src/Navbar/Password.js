@@ -36,7 +36,7 @@ function Password() {
     }
 
     try {
-     const res = await fetch("http://localhost:2000/auth/check", {
+     const res = await fetch("https://zenvy-store.onrender.com/auth/check", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -70,16 +70,23 @@ function Password() {
   localStorage.setItem("userId", user._id);
 
   console.log("✅ TOKEN SAVED:", token);
+  console.log("✅ USER SAVED:", user);
 
-  // ✅ FIXED: Change this line from "storage" to "userLoggedIn"
+  // Important: Dispatch event for same tab
   window.dispatchEvent(new Event("userLoggedIn"));
+  
+  // Also create storage event for cross-tab sync
+  const storageEvent = new StorageEvent('storage', {
+    key: 'user',
+    newValue: JSON.stringify(user)
+  });
+  window.dispatchEvent(storageEvent);
 
   setUserData(user);
 
   toast.success(`✅ Login Successful! Welcome ${user.fullName}`, {
     onClose: () => navigate("/"),
   });
-
 
       } else {
         toast.error("❌ Invalid Password!");
@@ -97,7 +104,7 @@ function Password() {
         return;
       }
 
-      const res = await fetch("http://localhost:2000/auth/check", {
+      const res = await fetch("https://zenvy-store.onrender.com/auth/check", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -114,7 +121,7 @@ function Password() {
 
       const user = data.user;
 
-      const otpRes = await fetch("http://localhost:2000/auth/otp/send", {
+      const otpRes = await fetch("https://zenvy-store.onrender.com/auth/otp/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -156,7 +163,7 @@ function Password() {
 
       <div className="d-flex justify-content-center align-items-center text-center mt-5 px-3">
         <a href="/" className="text-decoration-none text-black">
-          <img src={logo} alt="logp" height="70px" className="mb-4 logoimg" />
+          <img src={logo} alt="logp" height="70px" className="mb-4 logo-img" />
         </a>
         <span className="fw-semibold mb-1" style={{ marginTop: "-26px", fontSize: "13px" }}>
           .in

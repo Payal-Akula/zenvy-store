@@ -52,7 +52,7 @@ function TrackOrder() {
     const token = localStorage.getItem("token");
     
     try {
-      const res = await fetch(`http://localhost:2000/api/order/${id}`, {
+      const res = await fetch(`https://zenvy-store.onrender.com/api/order/${id}`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -422,7 +422,7 @@ function TrackOrder() {
         </button>
         <button 
           className="btn btn-danger"
-          onClick={() => window.open(`http://localhost:2000/api/order/invoice/${order._id}`, '_blank')}
+          onClick={() => window.open(`https://zenvy-store.onrender.com/api/order/invoice/${order._id}`, '_blank')}
         >
           <i className="bi bi-download me-2"></i>Download Invoice
         </button>

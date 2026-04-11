@@ -10,6 +10,42 @@ import Location from './Location';
 function Navtwo() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // Get user from localStorage
+  const getUserFromStorage = () => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    setUser(storedUser);
+  };
+
+  useEffect(() => {
+    getUserFromStorage();
+
+    const handleUserLogin = () => {
+      getUserFromStorage();
+    };
+    
+    const handleUserLogout = () => {
+      getUserFromStorage();
+      closeMobileMenu();
+    };
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'user') {
+        getUserFromStorage();
+      }
+    };
+
+    window.addEventListener('userLoggedIn', handleUserLogin);
+    window.addEventListener('userLoggedOut', handleUserLogout);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('userLoggedIn', handleUserLogin);
+      window.removeEventListener('userLoggedOut', handleUserLogout);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const toggleMobileMenu = () => { 
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -33,6 +69,18 @@ function Navtwo() {
     setIsSearchOverlayOpen(false);
   };
 
+  const handleMobileLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("phone");
+    setUser(null);
+    window.dispatchEvent(new Event('userLoggedOut'));
+    closeMobileMenu();
+    window.location.href = '/';
+  };
+
   useEffect(() => {
     return () => {
       document.body.style.overflow = 'unset';
@@ -46,15 +94,6 @@ function Navtwo() {
 
           {/* LEFT SIDE */}
           <div className="d-flex align-items-center left-section px-1">
-            {/* <button
-              className="navbar-toggler border-0 d-lg-none hamburger-btn"
-              type="button"
-              onClick={toggleMobileMenu}
-              aria-label="Toggle menu"
-            >
-              <span className="navbar-toggler-icon"></span>
-            </button> */}
-
             <NavLink to="/" className="navbar-brand" onClick={closeMobileMenu}>
               <img src={logo} alt="zenvy Logo" className="logo-img" />
             </NavLink>
@@ -125,21 +164,56 @@ function Navtwo() {
             
             <div className="mobile-menu-divider"></div>
             
-            <NavLink to="/signin" className="mobile-menu-item" onClick={closeMobileMenu}>
-              <i className="bi bi-person"></i> Sign In
-            </NavLink>
-            
-            <NavLink to="/orders" className="mobile-menu-item" onClick={closeMobileMenu}>
-              <i className="bi bi-box"></i> Returns & Orders
-            </NavLink>
-            
-            <NavLink to="/wishlist" className="mobile-menu-item" onClick={closeMobileMenu}>
-              <i className="bi bi-heart"></i> WishList
-            </NavLink>
-            
-            <NavLink to="/cart" className="mobile-menu-item" onClick={closeMobileMenu}>
-              <i className="bi bi-cart"></i> Cart
-            </NavLink>
+            {/* Conditional rendering for mobile menu - User logged in vs logged out */}
+            {user ? (
+              <>
+                {/* User logged in - Show username and sign out */}
+                <div className="mobile-user-info">
+                  <div className="mobile-user-greeting">
+                    <i className="bi bi-person-circle"></i>
+                    <div className="mobile-user-details">
+                      <span className="mobile-user-hello">Hello,</span>
+                      <span className="mobile-user-name">{user.fullName || user.name || "User"}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <NavLink to="/orders" className="mobile-menu-item" onClick={closeMobileMenu}>
+                  <i className="bi bi-box"></i> Returns & Orders
+                </NavLink>
+                
+                <NavLink to="/wishlist" className="mobile-menu-item" onClick={closeMobileMenu}>
+                  <i className="bi bi-heart"></i> WishList
+                </NavLink>
+                
+                <NavLink to="/cart" className="mobile-menu-item" onClick={closeMobileMenu}>
+                  <i className="bi bi-cart"></i> Cart
+                </NavLink>
+                
+                <button onClick={handleMobileLogout} className="mobile-menu-item mobile-logout-btn">
+                  <i className="bi bi-box-arrow-right"></i> Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                {/* User not logged in - Show sign in button */}
+                <NavLink to="/Signin" className="mobile-menu-item" onClick={closeMobileMenu}>
+                  <i className="bi bi-person"></i> Sign In
+                </NavLink>
+                
+                <NavLink to="/orders" className="mobile-menu-item" onClick={closeMobileMenu}>
+                  <i className="bi bi-box"></i> Returns & Orders
+                </NavLink>
+                
+                <NavLink to="/wishlist" className="mobile-menu-item" onClick={closeMobileMenu}>
+                  <i className="bi bi-heart"></i> WishList
+                </NavLink>
+                
+                <NavLink to="/cart" className="mobile-menu-item" onClick={closeMobileMenu}>
+                  <i className="bi bi-cart"></i> Cart
+                </NavLink>
+              </>
+            )}
             
             <div className="mobile-menu-divider"></div>
             
@@ -178,4 +252,4 @@ function Navtwo() {
   )
 }
 
-export default Navtwo
+export default Navtwo;

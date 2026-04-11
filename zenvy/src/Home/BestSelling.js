@@ -14,7 +14,7 @@ function BestSelling() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const { addToCart: addToCartContext } = useCart();
-  const API_URL = "http://localhost:2000";
+  const API_URL = "https://zenvy-store.onrender.com";
 
   const categories = [
     { name: "Furniture & Decor", path: "/furniture", endpoint: "/api/unified/furniture" },

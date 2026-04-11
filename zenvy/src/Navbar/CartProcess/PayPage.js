@@ -47,7 +47,7 @@ function PayPage() {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
 
-        const res = await fetch("http://localhost:2000/api/address", {
+        const res = await fetch("https://zenvy-store.onrender.com/api/address", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -99,7 +99,7 @@ function PayPage() {
     setLoading(true);
 
     try {
-     await fetch(`http://localhost:2000/api/order/confirm/${orderId}`, {
+     await fetch(`https://zenvy-store.onrender.com/api/order/confirm/${orderId}`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({

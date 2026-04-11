@@ -10,7 +10,7 @@ function ExchangePage() {
   const [reason, setReason] = useState("");
 
   useEffect(() => {
-    fetch(`http://localhost:2000/api/order/${id}`)
+    fetch(`https://zenvy-store.onrender.com/api/order/${id}`)
       .then(res => res.json())
       .then(data => setOrder(data));
   }, [id]);
@@ -18,7 +18,7 @@ function ExchangePage() {
   const handleSubmit = async () => {
     if (!reason) return alert("Select reason");
 
-    await fetch("http://localhost:2000/api/order/exchange", {
+    await fetch("https://zenvy-store.onrender.com/api/order/exchange", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

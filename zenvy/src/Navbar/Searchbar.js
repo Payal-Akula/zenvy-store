@@ -10,7 +10,7 @@ function Searchbar({ closeOverlay }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:2000/api/products")
+    fetch("https://zenvy-store.onrender.com/api/products")
       .then((res) => res.json())
       .then((data) => {
         console.log("Fetched Data:", data);

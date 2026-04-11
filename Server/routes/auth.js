@@ -1,4 +1,3 @@
-// auth/otp/send
 const { Router } = require("express")
 const { emailRegex } = require("../utils/regex")
 const { sendOtp, verifyOtp } = require("../services/authService")
@@ -7,70 +6,95 @@ const { generateToken } = require("../services/jwtservice");
 
 const router = Router()
 
-router.post("/otp/send", (req, res) => {
-    const email = req.body.email
-    if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: "Invalid email Adress" })
-
+// FIXED: Added async/await and proper error handling
+router.post("/otp/send", async (req, res) => {
+    try {
+        const email = req.body.email
+        console.log("📨 Received OTP request for email:", email);
+        
+        if (!emailRegex.test(email)) {
+            console.log("❌ Invalid email format:", email);
+            return res.status(400).json({ message: "Invalid email address" });
+        }
+        
+        // Call sendOtp and wait for it to complete
+        await sendOtp(email, res);
+        
+    } catch (error) {
+        console.error("❌ Error in /otp/send route:", error);
+        return res.status(500).json({ 
+            message: "Internal server error", 
+            error: error.message 
+        });
     }
-    sendOtp(email, res)
-})
+});
 
 router.post("/otp/verify", async (req, res) => {
-    const { email, otp, fullName, mobileNumber, password } = req.body;
+    try {
+        const { email, otp, fullName, mobileNumber, password } = req.body;
+        
+        console.log("📨 Received OTP verification request for:", email);
 
-    if (!emailRegex.test(email) || !otp || otp.length !== 6 || isNaN(Number(otp))) {
-        return res.status(400).json({ message: "Invalid Payload" });
+        if (!emailRegex.test(email) || !otp || otp.length !== 6 || isNaN(Number(otp))) {
+            console.log("❌ Invalid payload:", { email, otp });
+            return res.status(400).json({ message: "Invalid Payload" });
+        }
+
+        const result = await verifyOtp(email, Number(otp), {
+            fullName,
+            mobileNumber,
+            password
+        });
+
+        if (result.token) {
+            const currentDate = new Date();
+            currentDate.setDate(currentDate.getDate() + 28);
+            res.cookie("jwt-token", result.token, { expires: currentDate });
+            console.log("✅ Cookie set for user:", email);
+        }
+
+        res.status(result.statusCode).json({
+            message: result.message,
+            user: result.user,
+            token: result.token
+        });
+        
+    } catch (error) {
+        console.error("❌ Error in /otp/verify route:", error);
+        res.status(500).json({ message: error.message });
     }
-
-    const result = await verifyOtp(email, Number(otp), {
-        fullName,
-        mobileNumber,
-        password
-    });
-
-    if (result.token) {
-        const currentDate = new Date();
-        currentDate.setDate(currentDate.getDate() + 28);
-
-        res.cookie("jwt-token", result.token, { expires: currentDate });
-    }
-
-    res.status(result.statusCode).json({
-        message: result.message,
-        user: result.user,
-        token: result.token
-    })
 });
+
 router.post("/check", async (req, res) => {
-  try {
-    const { value } = req.body;
+    try {
+        const { value } = req.body;
+        console.log("🔍 Checking user existence for:", value);
 
-    let user;
+        let user;
 
-    if (/^[0-9]+$/.test(value)) {
-      user = await User.findOne({ mobileNumber: Number(value) });
-    } else {
-      user = await User.findOne({ email: value.toLowerCase() });
+        if (/^[0-9]+$/.test(value)) {
+            user = await User.findOne({ mobileNumber: Number(value) });
+        } else {
+            user = await User.findOne({ email: value.toLowerCase() });
+        }
+
+        if (user) {
+            const token = generateToken({ id: user._id });
+            console.log("✅ User found:", user.email);
+            return res.json({ 
+                exists: true, 
+                user,
+                token  
+            });
+        } else {
+            console.log("❌ User not found:", value);
+            return res.json({ exists: false });
+        }
+
+    } catch (error) {
+        console.error("❌ Error in /check route:", error);
+        res.status(500).json({ message: "Server error" });
     }
-
-    if (user) {
-      const token = generateToken({ id: user._id });
-
-      return res.json({ 
-        exists: true, 
-        user,
-        token  
-      });
-    } else {
-      return res.json({ exists: false });
-    }
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
 });
 
-
-module.exports = router
+module.exports = router;

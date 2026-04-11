@@ -10,7 +10,7 @@ function Furniture() {
   const [wishlist, setWishlist] = useState([]);
   const navigate = useNavigate();
   const { addToCart: addToCartContext } = useCart();
-  const API_URL = "http://localhost:2000";
+  const API_URL = "https://zenvy-store.onrender.com";
 
   useEffect(() => {
     fetchProducts();

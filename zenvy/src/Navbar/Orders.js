@@ -86,7 +86,7 @@ function Orders() {
   const fetchOrders = () => {
     if (!userId) return;
     
-    fetch(`http://localhost:2000/api/order/user/${userId}`)
+    fetch(`https://zenvy-store.onrender.com/api/order/user/${userId}`)
       .then(res => res.json())
       .then(data => {
         console.log("Fetched orders:", data);
@@ -453,7 +453,7 @@ function Orders() {
                           <span className="text-muted">|</span>
                           <button 
                             className="btn btn-link text-danger text-decoration-none p-0 small"
-                            onClick={() => window.open(`http://localhost:2000/api/order/invoice/${order._id}`, '_blank')}
+                            onClick={() => window.open(`https://zenvy-store.onrender.com/api/order/invoice/${order._id}`, '_blank')}
                           >
                             <i className="bi bi-download me-1"></i>Download Invoice
                           </button>

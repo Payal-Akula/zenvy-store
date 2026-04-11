@@ -8,7 +8,7 @@ function WishList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const API_URL = "http://localhost:2000";
+  const API_URL = "https://zenvy-store.onrender.com";
 
   useEffect(() => {
     fetchWishlist();

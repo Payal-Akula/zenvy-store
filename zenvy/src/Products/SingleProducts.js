@@ -24,7 +24,7 @@ function SingleProducts() {
         const fetchdata = async () => {
             setLoading(true);
             try {
-                let res = await fetch(`http://localhost:2000/api/products/search?q=${encodeURIComponent(keyword)}`);
+                let res = await fetch(`https://zenvy-store.onrender.com/api/products/search?q=${encodeURIComponent(keyword)}`);
                 let data = await res.json();
                 console.log("Fetched products:", data);
                 setP(data);

@@ -55,7 +55,7 @@ function Location({ isMobile = false }) {
     }
 
     try {
-      const res = await fetch("http://localhost:2000/api/address", {
+      const res = await fetch("https://zenvy-store.onrender.com/api/address", {
         headers: {
           Authorization: `Bearer ${token}`
         }

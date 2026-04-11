@@ -17,7 +17,7 @@ function Cart() {
 
 useEffect(() => {
   if (cart.length === 0) return;
-    fetch("http://localhost:2000/api/products")
+    fetch("https://zenvy-store.onrender.com/api/products")
       .then((res) => res.json())
       .then((data) => {
         let cartTitle = cart[0].title.toLowerCase();

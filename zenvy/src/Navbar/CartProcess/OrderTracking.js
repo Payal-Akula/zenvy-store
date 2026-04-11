@@ -8,7 +8,7 @@ function OrderTracking() {
 
   useEffect(() => {
     if (id && id !== 'undefined') {
-      fetch(`http://localhost:2000/api/order/${id}`)
+      fetch(`https://zenvy-store.onrender.com/api/order/${id}`)
         .then(res => {
           if (!res.ok) {
             throw new Error('Order not found');
