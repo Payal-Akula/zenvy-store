@@ -32,7 +32,7 @@ router.post("/otp/verify", async (req, res) => {
         const { email, otp, fullName, mobileNumber, password } = req.body;
         
         console.log("📨 Received OTP verification request for:", email);
-        console.log("OTP received:", otp);
+        // console.log("OTP received:", otp);
         console.log("FullName:", fullName);
         console.log("MobileNumber:", mobileNumber);
 

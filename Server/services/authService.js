@@ -104,12 +104,14 @@ const sendOtp = async (email, res) => {
             await sendOtpEmail(email, otp);
             console.log(`✅ Email sent successfully to: ${email}`);
         } catch (emailError) {
-            console.error(`❌ Failed to send email to ${email}:`, emailError.message);
-            return res.status(500).json({ 
-                message: "Failed to send OTP email. Please check your email configuration." 
-            });
-        }
-
+    console.error(`❌ Failed to send email to ${email}:`, emailError.message);
+    console.error("SENDGRID ERROR BODY:", JSON.stringify(emailError.response?.body || {}, null, 2));
+    console.error("SENDGRID STATUS:", emailError.code);
+    return res.status(500).json({ 
+        message: "Failed to send OTP email. Please check your email configuration.",
+        debug: emailError.response?.body || emailError.message
+    });
+}
         // Save or update OTP in database
         if (user) {
             user.otp = otp;

@@ -201,7 +201,6 @@ router.post("/remove", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
- 
 // ✅ CLEAR CART
 router.delete("/clear/:userId", async (req, res) => {
   try {
