@@ -21,7 +21,10 @@ const app = express();
 const connectDB = require("./config/db");
 connectDB();
 
-app.use(cors({ origin: "*" }));
+// app.use(cors({ origin: "*" }));
+app.use(cors({
+    origin: "https://zenvy-frontend-n2af.vercel.app"
+}));
 app.use(express.json());
 
 //img
